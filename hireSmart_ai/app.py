@@ -3,13 +3,14 @@ import pandas as pd
 import random
 from datetime import datetime
 from database.operations import initialize_database, insert_user_data, get_all_user_data
-from pipelines.resume_parser import parse_resume, pdf_reader
+from pipelines.resume_parser import parse_resume
 from pipelines.skill_analyzer import analyze_skills, determine_experience_level, analyze_resume
 from utils.file_handlers import show_pdf, save_uploaded_file, display_image
 from utils.helpers import get_table_download_link, fetch_yt_video, get_timestamp
 from Courses import ds_course, web_course, android_course, ios_course, uiux_course, resume_videos, interview_videos
 from config.settings import APP_CONFIG
 from database.models import UserData
+# from pipelines.resume_parser import parse_resume
 
 # st.write("✅ Streamlit is working")
 # Initialize database safely
@@ -90,7 +91,7 @@ def admin_pipeline():
     ad_password = st.text_input("Password", type='password')
     
     if st.button('Login'):
-        if ad_user == 'addy' and ad_password == 'addy123':
+        if ad_user == 'ruchika' and ad_password == '123456':
             st.success("Welcome Buddy!")
             display_admin_data()
         else:

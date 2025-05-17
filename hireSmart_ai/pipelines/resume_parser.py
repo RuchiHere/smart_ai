@@ -1,55 +1,59 @@
 import spacy
-import pyresparser.resume_parser
+import re
+from pdfminer.high_level import extract_text
 
-# Monkey patch pyresparser's spacy.load to load "en_core_web_sm" instead of its own folder
-def fixed_spacy_load(name, *args, **kwargs):
-    import os
-    rp_dir = os.path.dirname(os.path.abspath(pyresparser.resume_parser.__file__))
-    if name == rp_dir:
-        return spacy.load("en_core_web_sm")
-    else:
-        return spacy.load(name, *args, **kwargs)
+# Load spaCy model
+nlp = spacy.load("en_core_web_sm")
 
-pyresparser.resume_parser.spacy.load = fixed_spacy_load
+# Extract text from PDF file
+def extract_pdf_text(file_path):
+    return extract_text(file_path)
 
-from pyresparser import ResumeParser
-from pdfminer3.layout import LAParams
-from pdfminer3.pdfpage import PDFPage
-from pdfminer3.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer3.converter import TextConverter
-import io
+# Extract email using regex
+def extract_email(text):
+    match = re.search(r'[\w\.-]+@[\w\.-]+', text)
+    return match.group(0) if match else None
 
+# Extract phone number
+def extract_phone(text):
+    match = re.search(r'(\+?\d{1,3})?[-.\s]?\(?\d{3,4}\)?[-.\s]?\d{3}[-.\s]?\d{4}', text)
+    return match.group(0) if match else None
 
-def pdf_reader(file_path):
-    resource_manager = PDFResourceManager()
-    fake_file_handle = io.StringIO()
-    converter = TextConverter(resource_manager, fake_file_handle, laparams=LAParams())
-    page_interpreter = PDFPageInterpreter(resource_manager, converter)
+# Extract name using spaCy (first PERSON entity)
+def extract_name(text):
+    doc = nlp(text)
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":
+            return ent.text
+    return None
 
-    with open(file_path, 'rb') as fh:
-        for page in PDFPage.get_pages(fh, caching=True, check_extractable=True):
-            page_interpreter.process_page(page)
-        text = fake_file_handle.getvalue()
+# Basic keyword-based skills extraction
+def extract_skills(text, skill_set):
+    found = []
+    for skill in skill_set:
+        if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
+            found.append(skill)
+    return found
 
-    converter.close()
-    fake_file_handle.close()
-    return text
-
-
+# Main resume parser
 def parse_resume(file_path):
-    try:
-        # Use ResumeParser normally - now patched to load proper spacy model
-        resume_data = ResumeParser(file_path).get_extracted_data()
-        resume_text = pdf_reader(file_path)
-        return {
-            'data': resume_data,
-            'text': resume_text
-        }
-    except Exception as e:
-        raise Exception(f"Failed to parse resume: {str(e)}")
+    text = extract_pdf_text(file_path)
+    skills_list = ['Python', 'Java', 'C++', 'SQL', 'Machine Learning', 'Data Analysis', 'Excel', 'AWS']
 
+    return {
+        'name': extract_name(text),
+        'email': extract_email(text),
+        'phone': extract_phone(text),
+        'skills': extract_skills(text, skills_list),
+        'preview_text': text[:300] + "..."  # Optional
+    }
 
+# Run the parser
 if __name__ == "__main__":
-    file_path = "sample_resume.pdf"  # Change to your PDF resume path
-    result = parse_resume(file_path)
-    print(result)
+    path = "sample_resume.pdf"  # ← change to your file path
+    try:
+        result = parse_resume(path)
+        print(result)
+    except Exception as e:
+        print("Error processing resume:", str(e))
+
