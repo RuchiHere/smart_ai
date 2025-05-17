@@ -3,8 +3,8 @@ DB_CONFIG = {
     'host': 'localhost',
     'port': 3306,
     'user': 'root',
-    'password': 'Addy@123',
-    'db': 'cv'
+    'password': '123456',
+    #'db': 'cv'
 }
 
 # App configuration

@@ -11,6 +11,7 @@ from Courses import ds_course, web_course, android_course, ios_course, uiux_cour
 from config.settings import APP_CONFIG
 from database.models import UserData
 
+# st.write("✅ Streamlit is working")
 # Initialize database safely
 try:
     initialize_database()
@@ -113,4 +114,17 @@ def main():
         page_title=APP_CONFIG.get('page_title', "Hire Smart AI"),
         page_icon=APP_CONFIG.get('page_icon', ":robot:")
     )
+
+    st.title("🚀 Hire Smart AI is Live!")
+
+    st.sidebar.title("Navigation")
+    choice = st.sidebar.radio("Choose Option", ["User Panel", "Admin Panel"])
+
+    if choice == "User Panel":
+        user_pipeline()
+    elif choice == "Admin Panel":
+        admin_pipeline()
+
     
+if __name__ == "__main__":
+    main()
